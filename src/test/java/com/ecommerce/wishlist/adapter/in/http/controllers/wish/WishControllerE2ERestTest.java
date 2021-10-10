@@ -106,6 +106,21 @@ class WishControllerE2ERestTest {
                     hasEntry("message", "Product id cannot be blank."))));
   }
 
+  @Test
+  void shouldDeleteWish() {
+    var wish = mongodbWishRepository.save(wishSchema());
+    given()
+        .contentType(ContentType.JSON)
+        .when()
+        .delete("/v1/wishes/" + wish.getId())
+        .then()
+        .statusCode(204);
+  }
+
+  private WishSchema wishSchema() {
+    return WishSchema.builder().productId("p1").customerId("c1").build();
+  }
+
   void createWishNTimes(WishSchema wishSchema, int times) {
     var wishes = new ArrayList<WishSchema>();
     for (int i = 0; i < times; i++) {

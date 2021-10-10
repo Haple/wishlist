@@ -24,4 +24,9 @@ public class WishRepositoryImpl implements WishRepository {
   public Integer countByCustomerId(String customerId) {
     return mongodbWishRepository.countByCustomerId(customerId);
   }
+
+  @Override
+  public void delete(String wishId) {
+    mongodbWishRepository.deleteById(wishId);
+  }
 }

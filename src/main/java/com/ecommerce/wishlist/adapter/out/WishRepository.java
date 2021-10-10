@@ -7,4 +7,6 @@ public interface WishRepository {
   Wish save(Wish wish);
 
   Integer countByCustomerId(String customerId);
+
+  void delete(String wishId);
 }

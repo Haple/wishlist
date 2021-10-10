@@ -13,6 +13,8 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
@@ -59,6 +61,16 @@ class WishRepositoryImplIntegrationTest {
     var result = wishRepository.countByCustomerId(wish.getCustomerId());
 
     assertThat(result).isEqualTo(2);
+  }
+
+  @Test
+  void shouldDelete() {
+    var wish = wishRepository.save(wish());
+
+    wishRepository.delete(wish.getId());
+
+    List<WishSchema> wishes = mongodbWishRepository.findAll();
+    assertThat(wishes).isEmpty();
   }
 
   Wish wish() {
