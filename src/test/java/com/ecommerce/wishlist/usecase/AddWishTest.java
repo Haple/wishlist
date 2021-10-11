@@ -10,11 +10,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AddWishTest {
@@ -33,6 +35,20 @@ class AddWishTest {
     final var addedWish = addWish.execute(wish);
 
     assertThat(addedWish).isEqualTo(fakeWishReturn);
+  }
+
+  @Test
+  void shouldReturnSameWishIfItAlreadyExist() {
+    final var wish = wish();
+    final var fakeWishReturn = fakeWishReturn();
+    when(wishRepository.countByCustomerId(wish.getCustomerId())).thenReturn(0);
+    when(wishRepository.findOneByCustomerIdAndProductId(wish.getCustomerId(), wish.getProductId()))
+        .thenReturn(Optional.of(fakeWishReturn));
+
+    final var addedWish = addWish.execute(wish);
+
+    assertThat(addedWish).isEqualTo(fakeWishReturn);
+    verify(wishRepository, never()).save(any());
   }
 
   @Test

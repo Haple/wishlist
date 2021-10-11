@@ -2,9 +2,12 @@ package com.ecommerce.wishlist.adapter.in.http.controllers.wish;
 
 import com.ecommerce.wishlist.adapter.in.http.controllers.wish.request.CreateWishRequest;
 import com.ecommerce.wishlist.adapter.in.http.controllers.wish.response.WishResponse;
+import com.ecommerce.wishlist.adapter.in.http.controllers.wish.response.WishlistResponse;
 import com.ecommerce.wishlist.adapter.in.http.exception.StandardError;
 import com.ecommerce.wishlist.usecase.AddWish;
 import com.ecommerce.wishlist.usecase.DeleteWish;
+import com.ecommerce.wishlist.usecase.FindWish;
+import com.ecommerce.wishlist.usecase.GetWishlist;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -30,6 +33,8 @@ public class WishController {
 
   private final AddWish addWish;
   private final DeleteWish deleteWish;
+  private final GetWishlist getWishlist;
+  private final FindWish findWish;
 
   @ApiOperation(
       value = "Add wish to customer wishlist",
@@ -59,5 +64,42 @@ public class WishController {
     deleteWish.execute(wishId);
     log.info("Delete wish result return");
     return ResponseEntity.noContent().build();
+  }
+
+  @ApiOperation(
+      value = "Get customer's wishlist",
+      consumes = MediaType.APPLICATION_JSON_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ApiResponses(
+      value = {
+        @ApiResponse(code = 200, message = "Customer's wishlist", response = WishlistResponse.class)
+      })
+  @GetMapping("/wishlist")
+  public ResponseEntity<WishlistResponse> getWishlist(@RequestParam String customerId) {
+    log.info("Get wishlist request received: {}", customerId);
+    var result = getWishlist.execute(customerId);
+    log.info("Get wishlist request return: {}", result);
+    return ResponseEntity.ok().body(ControllerWishMapper.toWishlistResponse(result));
+  }
+
+  @ApiOperation(
+      value = "Find wish",
+      consumes = MediaType.APPLICATION_JSON_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ApiResponses(
+      value = {
+        @ApiResponse(code = 200, message = "Founded wish", response = WishlistResponse.class),
+        @ApiResponse(
+            code = 409,
+            message = "Product not on wishlist",
+            response = StandardError.class)
+      })
+  @GetMapping
+  public ResponseEntity<WishResponse> findWish(
+      @RequestParam String customerId, @RequestParam String productId) {
+    log.info("Find wish request received: {}", customerId);
+    var result = findWish.execute(customerId, productId);
+    log.info("Find wish request return: {}", result);
+    return ResponseEntity.ok().body(toResponse(result));
   }
 }

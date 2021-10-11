@@ -52,8 +52,8 @@ class WishRepositoryImplIntegrationTest {
   }
 
   @Test
-  void countByCustomerId() {
-    Wish wish = wish();
+  void shouldCountByCustomerId() {
+    var wish = wish();
     wishRepository.save(wish.toBuilder().customerId("other-customer-id").build());
     wishRepository.save(wish);
     wishRepository.save(wish);
@@ -71,6 +71,43 @@ class WishRepositoryImplIntegrationTest {
 
     List<WishSchema> wishes = mongodbWishRepository.findAll();
     assertThat(wishes).isEmpty();
+  }
+
+  @Test
+  void shouldFindByCustomerId() {
+    var wish = wish();
+    wishRepository.save(wish);
+    wishRepository.save(wish);
+    wishRepository.save(wish.toBuilder().customerId("other-customer-id").build());
+
+    var result = wishRepository.findByCustomerId(wish.getCustomerId());
+
+    assertThat(result).hasSize(2);
+  }
+
+  @Test
+  void shouldFindOneByCustomerIdAndProductId() {
+    var wish = wish();
+    wishRepository.save(wish);
+    wishRepository.save(wish.toBuilder().productId("other-product-id").build());
+    wishRepository.save(wish.toBuilder().customerId("other-customer-id").build());
+
+    var result =
+        wishRepository.findOneByCustomerIdAndProductId(wish.getCustomerId(), wish.getProductId());
+
+    assertThat(result).isPresent();
+  }
+
+  @Test
+  void shouldNotFindOneByCustomerIdAndProductId() {
+    var wish = wish();
+    wishRepository.save(wish.toBuilder().productId("other-product-id").build());
+    wishRepository.save(wish.toBuilder().customerId("other-customer-id").build());
+
+    var result =
+        wishRepository.findOneByCustomerIdAndProductId(wish.getCustomerId(), wish.getProductId());
+
+    assertThat(result).isNotPresent();
   }
 
   Wish wish() {

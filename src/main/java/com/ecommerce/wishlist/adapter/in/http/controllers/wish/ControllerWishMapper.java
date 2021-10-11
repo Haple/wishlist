@@ -2,9 +2,12 @@ package com.ecommerce.wishlist.adapter.in.http.controllers.wish;
 
 import com.ecommerce.wishlist.adapter.in.http.controllers.wish.request.CreateWishRequest;
 import com.ecommerce.wishlist.adapter.in.http.controllers.wish.response.WishResponse;
+import com.ecommerce.wishlist.adapter.in.http.controllers.wish.response.WishlistResponse;
 import com.ecommerce.wishlist.domain.Wish;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 class ControllerWishMapper {
 
@@ -29,6 +32,19 @@ class ControllerWishMapper {
                     .productId(domain.getProductId())
                     .createdAt(domain.getCreatedAt())
                     .updatedAt(domain.getUpdatedAt())
+                    .build())
+        .orElse(null);
+  }
+
+  static WishlistResponse toWishlistResponse(List<Wish> wishes) {
+    return Optional.ofNullable(wishes)
+        .map(
+            domains ->
+                WishlistResponse.builder()
+                    .wishes(
+                        domains.stream()
+                            .map(ControllerWishMapper::toResponse)
+                            .collect(Collectors.toList()))
                     .build())
         .orElse(null);
   }

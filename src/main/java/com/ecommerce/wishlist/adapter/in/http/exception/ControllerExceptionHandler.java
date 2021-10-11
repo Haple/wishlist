@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -65,23 +66,15 @@ public class ControllerExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
 
-  @ExceptionHandler(BindException.class)
-  public ResponseEntity<StandardError> handleBindException(
-      final BindException ex, final Locale locale) {
-    log.error("BindException:", ex);
-    List<StandardError.ErrorField> errorFields = new ArrayList<>();
-    for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-      errorFields.add(
-          StandardError.ErrorField.builder()
-              .field(error.getField())
-              .message(messageSource.getMessage(error, locale))
-              .build());
-    }
-    var messageCode = "Exception.BindException";
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ResponseEntity<StandardError> handleMissingServletRequestParameterException(
+      final MissingServletRequestParameterException ex, final Locale locale) {
+    log.error("MissingServletRequestParameterException:", ex);
+    var messageCode = "Exception.MissingServletRequestParameterException";
+    String[] args = {ex.getParameterName()};
     var error =
         StandardError.builder()
-            .message(messageSource.getMessage(messageCode, null, locale))
-            .fields(errorFields)
+            .message(messageSource.getMessage(messageCode, args, locale))
             .build();
     log.error("Returning bad request with standard error {}", error);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);

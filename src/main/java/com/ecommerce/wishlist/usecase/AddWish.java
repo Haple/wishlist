@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -17,7 +19,9 @@ public class AddWish {
 
   public Wish execute(final Wish wish) {
     checkCustomerWishlistLimit(wish.getCustomerId());
-    return wishRepository.save(wish);
+    Optional<Wish> alreadyAddedWish =
+        wishRepository.findOneByCustomerIdAndProductId(wish.getCustomerId(), wish.getProductId());
+    return alreadyAddedWish.orElseGet(() -> wishRepository.save(wish));
   }
 
   private void checkCustomerWishlistLimit(final String customerId) {

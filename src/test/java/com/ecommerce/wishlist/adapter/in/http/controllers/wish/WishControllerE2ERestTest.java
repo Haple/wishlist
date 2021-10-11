@@ -69,6 +69,23 @@ class WishControllerE2ERestTest {
   }
 
   @Test
+  void shouldReturnSameWishIfItAlreadyExist() {
+    var wish = mongodbWishRepository.save(wishSchema());
+    given()
+        .contentType(ContentType.JSON)
+        .body(
+            CreateWishRequest.builder()
+                .customerId(wish.getCustomerId())
+                .productId(wish.getProductId())
+                .build())
+        .when()
+        .post("/v1/wishes")
+        .then()
+        .statusCode(201)
+        .body("id", equalTo(wish.getId()));
+  }
+
+  @Test
   void shouldFailToCreateWishWhenReachWishlistLimit() {
     createWishNTimes(WishSchema.builder().customerId("c1").productId("p1").build(), 20);
 
@@ -115,6 +132,91 @@ class WishControllerE2ERestTest {
         .delete("/v1/wishes/" + wish.getId())
         .then()
         .statusCode(204);
+  }
+
+  @Test
+  void shouldGetWishlist() {
+    var wish = mongodbWishRepository.save(wishSchema());
+    given()
+        .contentType(ContentType.JSON)
+        .queryParam("customerId", wish.getCustomerId())
+        .when()
+        .get("/v1/wishes/wishlist")
+        .then()
+        .statusCode(200)
+        .body("wishes[0].id", equalTo(wish.getId()))
+        .body("wishes[0].customerId", equalTo(wish.getCustomerId()))
+        .body("wishes[0].productId", equalTo(wish.getProductId()))
+        .body("wishes[0].createdAt", notNullValue())
+        .body("wishes[0].updatedAt", notNullValue());
+  }
+
+  @Test
+  void shouldFailToGetWishlistWithoutCustomerId() {
+    given()
+        .contentType(ContentType.JSON)
+        .when()
+        .get("/v1/wishes/wishlist")
+        .then()
+        .statusCode(400)
+        .body("message", equalTo("Required request parameter customerId is not present."));
+  }
+
+  @Test
+  void shouldFindWish() {
+    var wish = mongodbWishRepository.save(wishSchema());
+    given()
+        .contentType(ContentType.JSON)
+        .queryParam("customerId", wish.getCustomerId())
+        .queryParam("productId", wish.getProductId())
+        .when()
+        .get("/v1/wishes")
+        .then()
+        .statusCode(200)
+        .body("id", equalTo(wish.getId()))
+        .body("customerId", equalTo(wish.getCustomerId()))
+        .body("productId", equalTo(wish.getProductId()))
+        .body("createdAt", notNullValue())
+        .body("updatedAt", notNullValue());
+  }
+
+  @Test
+  void shouldFailToFindWishWhenProductNotOnWishlist() {
+    var wish = mongodbWishRepository.save(wishSchema());
+
+    given()
+        .contentType(ContentType.JSON)
+        .queryParam("customerId", wish.getCustomerId())
+        .queryParam("productId", "other-product-id")
+        .when()
+        .get("/v1/wishes")
+        .then()
+        .statusCode(409)
+        .body("message", equalTo("Product not found on customer wishlist."));
+  }
+
+  @Test
+  void shouldFailToFindWishWithoutCustomerId() {
+    given()
+        .contentType(ContentType.JSON)
+        .queryParam("productId", "fake-product-id")
+        .when()
+        .get("/v1/wishes")
+        .then()
+        .statusCode(400)
+        .body("message", equalTo("Required request parameter customerId is not present."));
+  }
+
+  @Test
+  void shouldFailToFindWishWithoutProductId() {
+    given()
+        .contentType(ContentType.JSON)
+        .queryParam("customerId", "fake-customer-id")
+        .when()
+        .get("/v1/wishes")
+        .then()
+        .statusCode(400)
+        .body("message", equalTo("Required request parameter productId is not present."));
   }
 
   private WishSchema wishSchema() {
